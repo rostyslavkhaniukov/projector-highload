@@ -1,0 +1,71 @@
+version: '3.6'
+services:
+  telegraf:
+    image: telegraf:1.23.4
+    volumes:
+    - ./telegraf/etc/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+    depends_on:
+      - influxdb
+      - mongodb
+    links:
+      - influxdb
+      - mongodb
+    ports:
+    - '127.0.0.1:8125:8125/udp'
+
+  influxdb:
+    image: influxdb:1.8.10
+    env_file: configuration.env
+    ports:
+      - '127.0.0.1:8086:8086'
+    volumes:
+      - ./:/imports
+      - influxdb_data:/var/lib/influxdb
+
+  grafana:
+    image: grafana/grafana:8.5.10
+    depends_on:
+      - influxdb
+    env_file: configuration.env
+    links:
+      - influxdb
+    ports:
+      - '127.0.0.1:3000:3000'
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./grafana/dashboards/:/var/lib/grafana/dashboards/
+
+  mongodb:
+    image: mongo:4.2.22
+    ports:
+      - '127.0.0.1:27017:27017/udp'
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.4.0
+    container_name: as-infra-elastic
+    environment:
+      - discovery.type=single-node
+      - cluster.name=ESCluster
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms250m -Xmx750m"
+      - xpack.security.enabled=false
+      - node.name=es_node1
+    volumes:
+      - ./elasticsearch/elasticsearch.yml:/etc/elasticsearch/elasticsearch.yml:ro
+      - ./elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml:ro
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    expose:
+      - 9200
+    ports:
+      - "9200:9200"
+    labels:
+      - "traefik.backend=elasticsearch"
+      - "traefik.frontend.rule=Host:elasticsearch.localhost"
+
+volumes:
+  grafana_data: {}
+  influxdb_data: {}
