@@ -66,6 +66,15 @@ services:
       - "traefik.backend=elasticsearch"
       - "traefik.frontend.rule=Host:elasticsearch.localhost"
 
+  goapp:
+    depends_on:
+      - telegraf
+    links:
+      - telegraf
+    build:
+      context: writemetricsapp
+
+
 volumes:
   grafana_data: {}
   influxdb_data: {}
