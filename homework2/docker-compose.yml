@@ -69,11 +69,14 @@ services:
   goapp:
     depends_on:
       - telegraf
+      - elasticsearch
+      - mongodb
     links:
       - telegraf
+      - elasticsearch
+      - mongodb
     build:
       context: writemetricsapp
-
 
 volumes:
   grafana_data: {}

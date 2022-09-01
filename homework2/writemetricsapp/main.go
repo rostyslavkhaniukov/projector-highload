@@ -39,7 +39,9 @@ func somethingWithMongoDB() {
 }
 
 func somethingWithES() {
-	es, err := elasticsearch.NewDefaultClient()
+	es, err := elasticsearch.NewClient(elasticsearch.Config{
+		Addresses: []string{"http://elasticsearch:9200"},
+	})
 	if err != nil {
 		log.Fatalf("Error creating the client: %s", err)
 	}
